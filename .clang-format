@@ -1,0 +1,7 @@
+BasedOnStyle: LLVM
+BraceWrapping:
+    AfterClass: true
+ColumnLimit: 300
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never 

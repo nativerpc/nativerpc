@@ -1,0 +1,5 @@
+@PACKAGE_INIT@
+# Native RPC Configuration
+include(CMakeFindDependencyMacro)
+include("${CMAKE_CURRENT_LIST_DIR}/nativerpcTargets.cmake")
+check_required_components(nativerpc)

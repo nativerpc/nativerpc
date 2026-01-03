@@ -1,0 +1,33 @@
+{
+    "name": "nativerpc",
+    "version": "1.1.0",
+    "description": "",
+    "type": "commonjs",
+    "private": true,
+    "main": "src/nativerpc/index.ts",
+    "bin": {
+        "nativerpc": "./src/nativerpc/cli.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "update": "nativerpc update",
+        "status": "nativerpc status"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "ts-node": "^10.9.2",
+        "tsx": "^4.19.2",
+        "typescript": "^5.7.2"
+    },
+    "dependencies": {
+        "@types/ws": "^8.18.0",
+        "assert": "^2.1.0",
+        "chalk": "^5.6.2",
+        "jetty": "^0.1.1",
+        "process": "^0.11.10",
+        "ws": "^8.18.1",
+        "zeromq": "file:./staging_modules/zeromq_js"
+    }
+}
