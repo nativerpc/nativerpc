@@ -2,3 +2,6 @@ build
 install
 node_modules
 package-lock.json
+.venv
+__pycache__
+nativerpc.egg-info

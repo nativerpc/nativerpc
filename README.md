@@ -1,8 +1,9 @@
 # Native RPC Communication Library
 
-## Compilation
+## Setup
 
 ```
 cd nativerpc
 cmake -B build && cmake --build build --target install
+npm i
 ```

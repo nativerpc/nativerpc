@@ -9,6 +9,7 @@
  *          getMetadata
  * 
  *          initWorkspace
+ *          initCpp
  *          showFiles
  *          showTypes
  *          showProcesses
@@ -224,6 +225,104 @@ class Manager {
 
         console.log(`Found ${names.length} projects.`)
         console.log(`Updated configuration in ${workspaceFile}.`)
+    }
+
+    initCpp() {
+        const dir = process.cwd();
+        const parts = path.basename(dir).split('_');
+        const projectName = parts.map(item => item.charAt(0).toUpperCase() + item.slice(1)).join(' ');
+        const dirName = path.basename(dir);
+        const text = `
+            cmake_minimum_required(VERSION 3.16)
+
+            # ${projectName} Configuration
+            project(${dirName})
+            set(nativerpc_DIR ../nativerpc/install/cmake)
+            find_package(nativerpc REQUIRED)
+            set(CMAKE_CXX_STANDARD 23)
+            set(CMAKE_CXX_STANDARD_REQUIRED ON)
+            set(CMAKE_CXX_EXTENSIONS OFF)
+            set(CMAKE_BUILD_TYPE Debug)
+
+            # ${projectName} Executable
+            add_executable(
+                main
+                src/main.cpp
+            )
+            target_include_directories(
+                main
+                PUBLIC
+                nativerpc::nativerpc
+            )
+            target_link_libraries(
+                main
+                PUBLIC
+                nativerpc::nativerpc
+            )
+            set_target_properties(
+                main PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY "\${CMAKE_BINARY_DIR}/bin"
+                RUNTIME_OUTPUT_DIRECTORY_DEBUG "\${CMAKE_BINARY_DIR}/bin"
+                RUNTIME_OUTPUT_DIRECTORY_RELEASE "\${CMAKE_BINARY_DIR}/bin"
+                ARCHIVE_OUTPUT_DIRECTORY "\${CMAKE_BINARY_DIR}/bin"
+                ARCHIVE_OUTPUT_DIRECTORY_DEBUG "\${CMAKE_BINARY_DIR}/bin"
+                ARCHIVE_OUTPUT_DIRECTORY_RELEASE "\${CMAKE_BINARY_DIR}/bin"
+            )
+            add_custom_command(
+                TARGET main
+                POST_BUILD
+                COMMAND \${CMAKE_COMMAND} -E env CLICOLOR_FORCE=1 
+                \${CMAKE_COMMAND} -E cmake_echo_color --no-newline "Status: " --green "Success"
+            )
+
+            # ${projectName} Dependencies
+            add_custom_command(
+                TARGET main
+                POST_BUILD
+                COMMAND 
+                    \${CMAKE_COMMAND} 
+                    -E copy_if_different
+                    $<TARGET_FILE:nativerpc::cli>
+                    $<TARGET_FILE_DIR:main>
+            )
+            if(WIN32)
+            add_custom_command(
+                TARGET main
+                POST_BUILD
+                COMMAND 
+                \${CMAKE_COMMAND} 
+                -E copy_if_different
+                $<TARGET_FILE:nativerpc::nativerpc>
+                $<TARGET_FILE_DIR:main>
+            )
+            endif()
+
+            # ${projectName} Info
+            get_target_property(NATIVERPC_INCL nativerpc::nativerpc INTERFACE_INCLUDE_DIRECTORIES)
+            add_custom_target(
+                info
+                COMMAND \${CMAKE_COMMAND} -E echo "Build Settings:"
+                COMMAND \${CMAKE_COMMAND} -E echo "    Build Mode: \${CMAKE_BUILD_TYPE}"
+                COMMAND \${CMAKE_COMMAND} -E echo "    C++ Standard: \${CMAKE_CXX_STANDARD}"
+                COMMAND \${CMAKE_COMMAND} -E echo "    C++ Standard Required: \${CMAKE_CXX_STANDARD_REQUIRED}"
+                COMMAND \${CMAKE_COMMAND} -E echo "    C++ Extensions: \${CMAKE_CXX_EXTENSIONS}"
+                COMMAND \${CMAKE_COMMAND} -E echo "    External Dependencies: nativerpc-lib.lib, nativerpc-lib.dll"
+                COMMAND \${CMAKE_COMMAND} -E echo "    External Includes: \${NATIVERPC_INCL}"
+                COMMAND \${CMAKE_COMMAND} -E echo "    Build Tool: \${CMAKE_BUILD_TOOL}"
+                COMMAND \${CMAKE_COMMAND} -E echo "    Lib Tool: \${CMAKE_AR}"
+                COMMAND \${CMAKE_COMMAND} -E echo "    Source Dir: \${PROJECT_SOURCE_DIR}"
+                COMMAND \${CMAKE_COMMAND} -E echo "    Build Dir: \${CMAKE_BINARY_DIR}"
+                VERBATIM
+            )
+        `;
+        
+        const lines = text.split("\n").slice(1).map(item => item.slice("            ".length).trimEnd());
+        if (fs.existsSync('CMakeLists.txt'))         {
+            console.error("CMakeLists.txt already exists.")
+            process.exit(1);
+        }
+        fs.writeFileSync('CMakeLists.txt', lines.join("\n"), {encoding: 'utf-8'});
+        console.log(`Written CMakeLists.txt`);
     }
 
     async showFiles() {

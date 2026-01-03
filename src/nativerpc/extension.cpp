@@ -106,7 +106,7 @@ std::string getTempFileName(std::string name) {
     return ss.str();
 }
 
-std::string execProcess(std::string command, std::string cwd) {
+std::string execProcess(std::string command, std::string cwd, bool allowFail) {
     auto last = std::filesystem::current_path();
     if (cwd != ".") {
         std::filesystem::current_path(cwd);
@@ -149,9 +149,22 @@ std::string execProcess(std::string command, std::string cwd) {
     std::filesystem::current_path(last);
 
     if (status != 0) {
-        std::cerr << "Execution failed: code=" << status << ", cmd='" << command << "'" << std::endl;
-        std::cerr << result << std::endl << resp.str() << std::endl;
-        throw std::exception("Remote execution error");
+        if (allowFail) {
+            if (result.size()) {
+                rightTrim(result);
+                std::cerr << result << std::endl;
+            }
+            auto temp = resp.str();
+            rightTrim(temp);
+            if (temp.size()) {
+                std::cerr << temp << std::endl;
+            }
+            return "";
+        } else {
+            std::cerr << "Execution failed: code=" << status << ", cmd='" << command << "'" << std::endl;
+            std::cerr << result << std::endl << resp.str() << std::endl;
+            throw std::exception("Remote execution error");
+        }
     }
     return result;
 }

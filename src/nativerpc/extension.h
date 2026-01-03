@@ -81,7 +81,7 @@ class DLL_EXPORT Typing {
 
 DLL_EXPORT void terminateWithTrace();
 DLL_EXPORT std::string getTempFileName(std::string);
-DLL_EXPORT std::string execProcess(std::string command, std::string cwd);
+DLL_EXPORT std::string execProcess(std::string command, std::string cwd, bool allowFail=false);
 
 DLL_EXPORT void leftTrim(std::string &s);
 DLL_EXPORT void rightTrim(std::string &s);

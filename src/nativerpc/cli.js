@@ -22,6 +22,10 @@ function main() {
         const manager = new Manager();
         manager.initWorkspace();
     }
+    else if (command === 'initcpp') {
+        const manager = new Manager();
+        manager.initCpp();
+    }
     else if (command === 'files' || command == 'f') {
         const manager = new Manager();
         manager.showFiles();
