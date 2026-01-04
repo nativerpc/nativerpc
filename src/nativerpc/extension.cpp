@@ -280,6 +280,9 @@ std::vector<std::string> splitString(const std::string &str, std::string delimit
 }
 
 std::string joinString(std::vector<std::string> parts, std::string delimiter, int start, int last) {
+    if (start >= parts.size()) {
+        return "";
+    }
     std::string result = parts[start];
     for (int j = start + 1; j < (last > 0 ? min(last, parts.size()) : parts.size()); j++) {
         result += " " + parts[j];
