@@ -8,6 +8,7 @@
  *      Typing
  *      terminateWithTrace
  *      getTempFileName
+ *      execShell
  *      execProcess
  *      native_array
  *      leftTrim
@@ -81,6 +82,7 @@ class DLL_EXPORT Typing {
 
 DLL_EXPORT void terminateWithTrace();
 DLL_EXPORT std::string getTempFileName(std::string);
+DLL_EXPORT void execShell(std::string command);
 DLL_EXPORT std::string execProcess(std::string command, std::string cwd, bool allowFail=false);
 
 DLL_EXPORT void leftTrim(std::string &s);
@@ -98,5 +100,6 @@ DLL_EXPORT std::string joinString(std::vector<std::string> parts, std::string de
 DLL_EXPORT std::map<std::string, std::string> getHeaderMap(std::string headers, std::vector<std::string> names);
 
 DLL_EXPORT std::tuple<std::string, std::string, nlohmann::json> makeRequest(int socket, std::string req);
+DLL_EXPORT void setEnvVar(std::string name, std::string value);
 
 } // namespace nativerpc

@@ -56,16 +56,18 @@ export class Serializer {
     modules: any[];
     schemaList: SchemaInfo[];
     fieldList: Record<string, FieldInfo[]>;
+    verbose: boolean
     
     constructor() {
         this.modules = [require.main];
         this.schemaList = [];
         this.fieldList = {};
+        this.verbose = false;
 
         // Read settings
         verifyPython();
         let packageDir = getProjectPath();
-        while (packageDir && !fs.existsSync(path.join(packageDir, CONFIG_NAME))) {
+        while (path.basename(packageDir) && !fs.existsSync(path.join(packageDir, CONFIG_NAME))) {
             packageDir = path.dirname(packageDir);
         }
         assert(packageDir);
@@ -153,7 +155,7 @@ export class Serializer {
             if (item.className != name || !item.fieldName) {
                 continue;
             }
-            assert(inst[item.fieldName] !== undefined);
+            assert(inst[item.fieldName] !== undefined, `Unknown field name: ${item.className}.${item.fieldName}`);
             result.push(new FieldInfo({
                 className: name,
                 classType: classType,
@@ -281,6 +283,7 @@ export class Server {
     closedConnections: Connection[];
     currentConnection: any;
     newConnectionId: number;
+    verbose: boolean
 
     constructor(options: Options) {
         this.classType = options.service;
@@ -295,6 +298,7 @@ export class Server {
         this.closedConnections = [];
         this.currentConnection = null;
         this.newConnectionId = 0;
+        this.verbose = false;
 
         // Add custom metadata
         this.serializer.schemaList.push(
@@ -356,9 +360,11 @@ export class Server {
                             connection.wtime = Date.now() / 1000;
                             this.activeConnections.splice(this.activeConnections.indexOf(connection), 1)
                             this.closedConnections.push(connection)
-                            console.log(
-                                `Removing client: 1, ${this.activeConnections.length}, ${this.closedConnections.length}, ${connection.error}`
-                            )
+                            if (this.verbose) {
+                                console.log(
+                                    `Removing client: 1, ${this.activeConnections.length}, ${this.closedConnections.length}, ${connection.error}`
+                                )
+                            }
                         }
                     })
                 }
@@ -468,9 +474,11 @@ export class Server {
             callId: "",
         });
         this.activeConnections.push(connection);
-        console.log(
-            `Adding client: ${this.activeConnections.length}, ${this.closedConnections.length}`
-        )
+        if (this.verbose) {
+            console.log(
+                `Adding client: ${this.activeConnections.length}, ${this.closedConnections.length}`
+            )
+        }
         return { isNew: true, connection };
     }
 
@@ -516,9 +524,11 @@ export class Server {
         if (connection.projectId == "nativerpc") {
             // silent
         } else {
-            console.log(
-                `Responding to metadata: ${connection.connectionId}, ${connection.projectId}`
-            )
+            if (this.verbose) {
+                console.log(
+                    `Responding to metadata: ${connection.connectionId}, ${connection.projectId}`
+                )
+            }
         }
 
         // Cleanup
@@ -587,6 +597,7 @@ export class Client {
     mainReceiver: SocketReceiver;
     connectionId: number;
     proxyInstance: Service;
+    verbose: boolean
 
     constructor(options: Options) {
         this.className = options.service.name;
@@ -598,6 +609,7 @@ export class Client {
         this.mainReceiver = null;
         this.connectionId = 0;
         this.proxyInstance = new Service(this);
+        this.verbose = false;
 
         // Add custom metadata
         this.serializer.schemaList.push(
@@ -653,7 +665,7 @@ export class Client {
         this.mainReceiver = new SocketReceiver();
         this.mainSocket = net.createConnection(
             { 
-                port: 9001,
+                port: this.port,
                 host: 'localhost',
             }, 
             () => {
@@ -673,7 +685,7 @@ export class Client {
         this.mainSocket.write(
             createPayload(
                 'POST /Metadata/connectClient HTTP/1.1',
-                `Host: ${this.host}`,
+                `Host: ${this.host}:${this.port}`,
                 'User-Agent: nativerpc/1.0.0',
                 'Content-Type: application/json',
                 'Content-Length: $payloadSize',
@@ -713,7 +725,7 @@ export class Client {
         this.mainSocket.write(
             createPayload(
                 `POST /${className}/${methodName} HTTP/1.1`,
-                `Host: ${this.host}`,
+                `Host: ${this.host}:${this.port}`,
                 'User-Agent: nativerpc/1.0.0',
                 'Content-Type: application/json',
                 'Content-Length: $payloadSize',
@@ -748,7 +760,7 @@ export class Client {
         this.mainSocket.write(
             createPayload(
                 'POST /Metadata/closeClient HTTP/1.1',
-                `Host: ${this.host}`,
+                `Host: ${this.host}:${this.port}`,
                 'User-Agent: nativerpc/1.0.0',
                 'Content-Type: application/json',
                 'Content-Length: $payloadSize',

@@ -453,7 +453,9 @@ void Server::startServer() {
                     _newConnectionId++;
                     auto connection = std::make_shared<Connection>(_newConnectionId, newSock, getSocketHost(newSock), getTime(), getTime(), "unknown", "");
                     _activeConnections.push_back(connection);
-                    std::cout << "Adding client: " << _activeConnections.size() << ", " << _closedConnections.size() << ", " << (unsigned int)newSock << std::endl;
+                    if (_verbose) {
+                        std::cout << "Adding client: " << _activeConnections.size() << ", " << _closedConnections.size() << ", " << (unsigned int)newSock << std::endl;
+                    }
                 }
             } 
             // Read
@@ -509,7 +511,9 @@ void Server::startServer() {
                     _closedConnections.push_back(connection);
                     _activeConnections.erase(std::find(_activeConnections.begin(), _activeConnections.end(), connection));
                     closesocket(sock);
-                    std::cout << "Failing client: " << _activeConnections.size() << ", " << _closedConnections.size() << std::endl;
+                    if (_verbose) {
+                        std::cout << "Failing client: " << _activeConnections.size() << ", " << _closedConnections.size() << std::endl;
+                    }
                 }
                 // Handle closing
                 else if (received == 0) {
@@ -519,7 +523,9 @@ void Server::startServer() {
                     closesocket(sock);
                     _closedConnections.push_back(connection);
                     _activeConnections.erase(std::find(_activeConnections.begin(), _activeConnections.end(), connection));
-                    std::cout << "Removing client: " << _activeConnections.size() << ", " << _closedConnections.size() << std::endl;
+                    if (_verbose) {
+                        std::cout << "Removing client: " << _activeConnections.size() << ", " << _closedConnections.size() << std::endl;
+                    }
                 }
                 // Process message
                 else if (payload != nullptr) {
@@ -571,7 +577,9 @@ void Server::startServer() {
                         closesocket(sock);
                         _closedConnections.push_back(connection);
                         _activeConnections.erase(std::find(_activeConnections.begin(), _activeConnections.end(), connection));
-                        std::cout << "Errored client: " << _activeConnections.size() << ", " << _closedConnections.size() << ", " << error << std::endl;
+                        if (_verbose) {
+                            std::cout << "Errored client: " << _activeConnections.size() << ", " << _closedConnections.size() << ", " << error << std::endl;
+                        }
                     }
 
                     _currentConnection.reset();
@@ -659,7 +667,9 @@ nlohmann::json Server::getMetadata(nlohmann::json param) {
     if (connection->projectId == "nativerpc") {
         // silent
     } else {
-        std::cout << "Responding to metadata: " << connection->connectionId << ", " << connection->projectId << std::endl;
+        if (_verbose) {
+            std::cout << "Responding to metadata: " << connection->connectionId << ", " << connection->projectId << std::endl;
+        }
     }
 
     // Cleanup

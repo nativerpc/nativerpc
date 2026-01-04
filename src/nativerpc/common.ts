@@ -21,10 +21,10 @@
  *      SchemaFileInfo
  *      QueryInfo
  */
-const assert = require('node:assert');
-const fs = require('node:fs');
-const path = require('node:path');
-const spawnSync = require('node:child_process').spawnSync;
+import { strict as assert } from "node:assert";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { spawnSync } from "node:child_process";
 import { 
     type ClassType
 } from "./extension";
@@ -108,7 +108,7 @@ export class MethodInfo {
 }
 
 export type Options = {
-    service: ClassType<any>;
+    service: any;
     host: [string, number];
 }
 

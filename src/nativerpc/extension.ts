@@ -123,6 +123,9 @@ export class SocketReceiver {
         });
     }
     async wait(id): Promise<{status: number, headers: string, body: any, error: string}> {
+        if (!this.preConnected && !this.closed && !this.socket.closed) {
+            throw new Error(`Connection missing`);
+        }
         if (!this.preConnected || this.closed || this.socket.closed) {
             return {
                 status: 501,

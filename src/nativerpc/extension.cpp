@@ -87,6 +87,13 @@ class TerminateWithTrace {
         // _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
         // _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
         std::set_terminate(terminateWithTrace);
+
+        // HANDLE stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        // DWORD originalAttributes;
+        // GetConsoleScreenBufferInfo(stdOut, &originalAttributes); // Save original
+        // SetConsoleTextAttribute(stdOut, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+        // SetConsoleTextAttribute(stdOut, FOREGROUND_RED | BACKGROUND_BLUE);
+        // SetConsoleTextAttribute(stdOut, originalAttributes)
     }
 
     static int terminateWithException(int reportType, char *message, int *returnValue) {
@@ -106,6 +113,13 @@ std::string getTempFileName(std::string name) {
     return ss.str();
 }
 
+void execShell(std::string command) {
+    auto result = system(command.c_str());
+    if (result != 0) {
+        exit(result);
+    }
+}
+
 std::string execProcess(std::string command, std::string cwd, bool allowFail) {
     auto last = std::filesystem::current_path();
     if (cwd != ".") {
@@ -114,7 +128,7 @@ std::string execProcess(std::string command, std::string cwd, bool allowFail) {
 
     // See also: C:\Users\XXX\AppData\Local\Temp\nrpc-stderr.txt
     const auto err_file = getTempFileName("nrpc-stderr.txt");
-    std::array<char, 128> buffer;
+    std::array<char, 1024> buffer;
     std::string result = "";
     std::string cmd = command + " 2>" + err_file;
 #ifdef _WIN32
@@ -343,4 +357,17 @@ std::tuple<std::string, std::string, nlohmann::json> makeRequest(int socket, std
     }
 }
 
+void setEnvVar(std::string name, std::string value) {
+    #if defined(__unix__) || defined(__APPLE__)
+        if (setenv(name.c_str(), value.c_str(), 1) != 0) {
+            std::cerr << "Failed to set environment variable (setenv)" << std::endl;
+        }
+    #elif defined(_WIN32)
+        if (_putenv_s(name.c_str(), value.c_str()) != 0) {
+            std::cerr << "Failed to set environment variable (_putenv_s)" << std::endl;
+        }
+    #else
+        std::cerr << "Environment variable setting not supported on this platform" << std::endl;
+    #endif
+}
 } // namespace nativerpc

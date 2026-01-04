@@ -1144,8 +1144,10 @@ def parseSchemaScene(file):
         "std::string": "str",
         "string": "str",
         "nlohmann::json": "dict",
+        "json": "dict",
         "boolean": "bool",
         "object": "dict",
+        "Object": "dict",
         "any": "dict",
         "list": "list",
         "Array": "list",
@@ -1218,8 +1220,12 @@ def parseSchemaScene(file):
                     })
 
                 matched5 = item2.getParams(['statement', 'def', '*', 'curly', '->', '*', ':', '...'])
+                if matched5 and item2.childList[2].childList[0].getParams(["argument", "*"]) != ["self"]:
+                    raise RuntimeError(f"Missing self argument in: {class_name}.{matched5[0]}")
                 matched6 = item2.childList[2].childList[1].getParams(
                     ['argument', '*', ':', '*']) if matched5 else None
+                if matched5 and not matched6:
+                    raise RuntimeError(f"Missing two arguments and a type: {matched5}")
                 if matched5 and matched6:
                     result.append({
                         "className": class_name,

@@ -107,6 +107,7 @@ class DLL_EXPORT Serializer {
     std::vector<std::string> _modules;
     std::vector<SchemaInfo> _schemaList;
     std::map<std::string, std::vector<FieldInfo>> _fieldList;
+    bool _verbose{false};
 };
 
 class DLL_EXPORT Server {
@@ -132,6 +133,7 @@ class DLL_EXPORT Server {
     std::vector<std::shared_ptr<Connection>> _closedConnections;
     std::shared_ptr<Connection> _currentConnection;
     int _newConnectionId;
+    bool _verbose{false};
 };
 
 class DLL_EXPORT Client {
@@ -169,6 +171,7 @@ class DLL_EXPORT Client {
     std::shared_ptr<ServiceHolder> _proxyInstance;
     Client* _self;
     int _connectionId;
+    bool _verbose{false};
 };
 
 } // namespace nativerpc

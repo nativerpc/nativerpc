@@ -6,6 +6,7 @@ export {
 } from './common';
 
 export {
+    Serializer,
     Server,
     Client,
 } from './main';

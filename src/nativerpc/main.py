@@ -49,21 +49,25 @@ from .common import (
 from .extension import (
     getHeaderMap
 )
+# from typing import TypeAlias, TypeVar, Generic, Type
+# T = TypeVar("T")
 
 
 class Serializer:
     modules: list
     schemaList: list[SchemaInfo]
     fieldList: dict[str, list[FieldInfo]]
+    verbose: bool
 
     def __init__(self):
         self.modules = []
         self.schemaList = []
         self.fieldList = {}
+        self.verbose = False
 
         # Read settings
         package_dir = os.path.join(os.path.dirname(__main__.__file__), '..')
-        while package_dir and not os.path.exists(os.path.join(package_dir, CONFIG_NAME)):
+        while os.path.basename(package_dir) and not os.path.exists(os.path.join(package_dir, CONFIG_NAME)):
             package_dir = os.path.dirname(package_dir)
         assert package_dir
         settings = None
@@ -176,7 +180,10 @@ class Serializer:
 
         return result
 
-    def toJson(self, typeName, obj):
+    def toJson(self, typeName, obj=None):
+        if obj is None:
+            obj = typeName
+            typeName = obj.__class__.__name__
         if not isinstance(typeName, str):
             typeName = obj.__class__.__name__
 
@@ -255,6 +262,7 @@ class Server:
     closedConnections: list[Connection]
     currentConnection: Connection
     newConnectionId: int
+    verbose: bool
 
     def __init__(self, options: Options):
         self.className = options[SERVICE].__bases__[0].__name__
@@ -270,6 +278,7 @@ class Server:
         self.closedConnections = []
         self.currentConnection = None
         self.newConnectionId = 0
+        self.verbose = False
         verifyPython()
 
         # Add custom metadata
@@ -359,10 +368,11 @@ class Server:
                         wtime=time.time(),
                         projectId="unknown",
                     ))
-                    print(
-                        f'Adding client: {len(self.activeConnections)}, '
-                        f'{len(self.clientSockets)}, {len(self.closedConnections)}'
-                    )
+                    if self.verbose:
+                        print(
+                            f'Adding client: {len(self.activeConnections)}, '
+                            f'{len(self.clientSockets)}, {len(self.closedConnections)}'
+                        )
                 
                 # Read
                 else:
@@ -411,20 +421,21 @@ class Server:
                     buf = None
                     if closeEvent > 0:
                         pass
-                    elif payload:
+                    elif payload is not None:
                         # Server call
                         try:
                             self.currentConnection = connection
                             buf = self.serverCall(url, payload)
-
+                            
                         # Process error
                         except Exception as ex:
-                            print(
-                                f"ERROR: Failed in call: "
-                                f"{connection.connectionId}, {connection.callId}, "
-                                f"{url}, {ex}"
-                            )
-                            traceback.print_exc()
+                            if self.verbose:
+                                print(
+                                    f"ERROR: Failed in call: "
+                                    f"{connection.connectionId}, {connection.callId}, "
+                                    f"{url}, {ex}"
+                                )
+                                traceback.print_exc()
                             closeEvent = 2
                             respBuf = json.dumps({
                                 "type": "https://nativerpc.com/errors/not-found",
@@ -448,12 +459,13 @@ class Server:
                         try:
                             sock.sendall(buf)
                         except Exception as ex:
-                            print(
-                                f"ERROR: Failed in send: "
-                                f"{connection.connectionId}, {connection.callId}"
-                                f"{url}, {ex}"
-                            )
-                            traceback.print_exc()
+                            if self.verbose:
+                                print(
+                                    f"ERROR: Failed in send: "
+                                    f"{connection.connectionId}, {connection.callId}"
+                                    f"{url}, {ex}"
+                                )
+                                traceback.print_exc()
                             closeEvent = 3
 
                     # Ensure closed
@@ -470,11 +482,12 @@ class Server:
                             closed = True
                         except Exception:
                             pass
-                        print(
-                            f"Removing client: "
-                            f"{closeEvent}, {closed}, "
-                            f"{len(self.activeConnections)}, {len(self.clientSockets)}, {len(self.closedConnections)}"
-                        )
+                        if self.verbose:
+                            print(
+                                f"Removing client: "
+                                f"{closeEvent}, {closed}, "
+                                f"{len(self.activeConnections)}, {len(self.clientSockets)}, {len(self.closedConnections)}"
+                            )
 
         self.mainSocket.close()
 
@@ -526,8 +539,9 @@ class Server:
         if connection.projectId == "nativerpc":
             pass
         else:
-            print(
-                f'Responding to metadata: {connection.connectionId}, {connection.projectId}')
+            if self.verbose:
+                print(
+                    f'Responding to metadata: {connection.connectionId}, {connection.projectId}')
 
         # Cleanup
         for client in self.closedConnections[:]:
@@ -588,6 +602,7 @@ class Client:
     mainSocket: requests.Session
     connectionId: int
     proxyInstance: any
+    verbose: bool
 
     def __init__(self, options: Options):
         self.className = options[SERVICE].__name__
@@ -598,6 +613,7 @@ class Client:
         self.mainSocket = None
         self.connectionId = 0
         self.proxyInstance = Service(self)
+        self.verbose = False
 
         # Add custom metadata
         self.serializer.schemaList.extend([
@@ -756,6 +772,7 @@ class Client:
             resp.raise_for_status()
             assert resp.status_code == 200
         except Exception:
-            print('WARNING: Failing to close cleanly')
+            if self.verbose:
+                print('WARNING: Failing to close cleanly')
         self.mainSocket.close()
         self.mainSocket = None
