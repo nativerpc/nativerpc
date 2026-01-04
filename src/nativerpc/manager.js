@@ -384,7 +384,7 @@ class Manager {
         let lastName = '';
         for (const item of methods2) {
             const count = this.schemaList.filter(x => x.className == item.className && x.methodName == item.methodName && x.methodRequest === item.methodRequest && x.methodResponse === item.methodResponse).length;
-            const status = count == bestCount ? chalk.magenta(`${count}/${bestCount}`) : chalk.dim(chalk.magenta(`${count}/${bestCount}`));
+            const status = count == bestCount ? chalk.magenta(`${count}/${bestCount}`) : chalk.magenta(`${count}/${bestCount}`);
             const signature = `${chalk.cyan(item.methodRequest)} ${chalk.dim('->')} ${chalk.cyan(item.methodResponse)}`;
             lines.push(
                 `${(lastName === item.className ? ' ' : chalk.yellow(item.className)).padEnd(20 + (lastName == item.className ? 0 : 10), ' ')} ` +
@@ -399,7 +399,7 @@ class Manager {
         for (const item of fields2) {
             const [className, fieldName, fieldType] = item.split(':');
             const count = this.schemaList.filter(item => item.className == className && item.fieldName == fieldName && item.fieldType === fieldType).length;
-            const status = count == bestCount ? chalk.magenta(`${count}/${bestCount}`) : chalk.dim(chalk.magenta(`${count}/${bestCount}`));
+            const status = count == bestCount ? chalk.magenta(`${count}/${bestCount}`) : chalk.magenta(`${count}/${bestCount}`);
             const className3 = lastName == className ? ' ' : chalk.green(className);
             lines.push(
                 `${className3.padEnd(20 + (lastName == className ? 0 : 10), ' ')} ` +
