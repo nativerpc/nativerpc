@@ -17,16 +17,16 @@ def getHeaderMap(headers, names):
     result = {}
     headers = headers.lower()
     for name in names:
-        hdr_name = name.lower() + ":"
-        if hdr_name not in headers:
+        colonName = name.lower() + ":"
+        if colonName not in headers:
             result[name] = ""
             continue
-        idx1 = headers.index(hdr_name) + len(hdr_name)
-        idx2 = len(headers)
+        startIndex = headers.index(colonName) + len(colonName)
+        endIndex = len(headers)
         try:
-            idx2 = headers.index("\n", idx1)
+            endIndex = headers.index("\n", startIndex)
         except Exception:
             pass
-        result[name] = headers[idx1:idx2].strip()
+        result[name] = headers[startIndex:endIndex].strip()
 
     return result

@@ -424,9 +424,6 @@ export class Server {
                 req.on('error', (err) => {
                     connection.error = err;
                     console.error('Request error:', err);
-                    // res.writeHead(505, { 'Content-Type': 'application/json' });
-                    // res.end(JSON.stringify({error: `Internal Server Error: ${err}`}));
-                    // assert(res.headersSent);
                     connection.socket.destroy()
                 });
                 res.on('finish', () => {
@@ -496,7 +493,6 @@ export class Server {
         const resp = await met.methodCall.apply(met.classInstance, [param])
         assert(resp instanceof respType);
         const respJson = this.serializer.toJson(met.methodResponse, resp);
-        // console.log('CALL', parts, Object.keys(param).length, Object.keys(respJson).length)
         return respJson;
     }
 

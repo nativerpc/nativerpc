@@ -21,7 +21,6 @@
  *          connectClient
  *          getMetadata
  *          closeClient
- *          loadSchema
  *
  *      Client
  *          Client
@@ -30,7 +29,6 @@
  *          setupInstance
  *          clientCall
  *          close
- *          loadSchema
  *          getProxyMethod
  *          proxyCall
  */
@@ -119,7 +117,6 @@ class DLL_EXPORT Server {
     nlohmann::json connectClient(nlohmann::json param);
     nlohmann::json getMetadata(nlohmann::json param);
     nlohmann::json closeClient(nlohmann::json param);
-    void loadSchema();
 
   private:
     std::shared_ptr<Any> _classInstance;
@@ -146,7 +143,6 @@ class DLL_EXPORT Client {
     void setupInstance();
     nlohmann::json clientCall(std::string className, std::string methodName, nlohmann::json data);
     void close();
-    void loadSchema();
 
     AnyMethod getProxyMethod(int sizeOffset, int methodIndex);
 

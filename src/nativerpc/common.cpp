@@ -145,8 +145,6 @@ ServiceHolder::~ServiceHolder() {
     _parent = nullptr;
 }
 
-// Service::Service() {}
-
 void verifyPython() {
     std::ostringstream cmd;
     cmd << "python --version";

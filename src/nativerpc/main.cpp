@@ -381,17 +381,7 @@ void Server::startServer() {
         throw std::runtime_error(std::string() + "Failed to set receive timeout, code=" + std::to_string(WSAGetLastError()));
     }
 
-    // TODO: SO_REUSEPORT on linux
-    // TODO: SO_KEEPALIVE
-
-    // int opt = 1;
-    // if (setsockopt(_mainSocket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char *>(&opt), sizeof(opt))) {
-    //     throw std::runtime_error(std::string() + "Internal socket issue, code=" + std::to_string(WSAGetLastError()));
-    // }
-
     struct sockaddr_in address = {AF_INET, htons(_port), INADDR_ANY};
-
-    // TODO: thisHost = gethostbyname(""); ip = inet_ntoa(*(struct in_addr *) *thisHost->h_addr_list); service.sin_addr.s_addr = inet_addr(ip);
 
     if (bind(_mainSocket, (struct sockaddr *)&address, sizeof(address))) {
         throw std::runtime_error(std::string() + "Failed to bind socket, code=" + std::to_string(WSAGetLastError()));
@@ -467,7 +457,6 @@ void Server::startServer() {
                     connection->readBuffer.insert(connection->readBuffer.end(), inputBuffer, inputBuffer + received);
                 }
                 auto middleIndex = received > 0 ? findIndex(connection->readBuffer, "\r\n\r\n") : -1;
-                // std::cout<<"---WAITING "<< connection->connectionId << ", "<< middleIndex << ", " << connection->readBuffer.size() << std::endl;
 
                 // Parse headers and payload
                 url = "";
@@ -590,7 +579,6 @@ void Server::startServer() {
 }
 
 nlohmann::json Server::serverCall(std::string url, nlohmann::json payload) {
-    // std::cout<<"---INCOMING " << url  << std::endl;
     auto parts2 = splitString(url, "/");
     if (parts2.size() != 3 || parts2[0] != "") {
         throw std::runtime_error("Failed to parse route");
@@ -638,7 +626,6 @@ nlohmann::json Server::serverCall(std::string url, nlohmann::json payload) {
         throw std::runtime_error(std::string() + "Too large payload: " + std::to_string(param.capacity()));
     }
 
-    // std::cout << "---CALL " << parts2[1] << "." << parts2[2] << ": " << met.methodRequest.className << ", " << met.methodResponse.className << ", " << param.size() << ", " << _serializer->getSize(met.methodResponse.className) << std::endl;
     return result;
 }
 
@@ -764,8 +751,6 @@ Client::Client(nlohmann::json options) {
     _serializer->_schemaList.push_back(SchemaInfo("", "Metadata", "closeClient", "dict", "dict", -1));
 
     // Register methods
-    // assert(std::search(_serializer->_schemaList.begin(), _serializer->_schemaList.end(), [](const SchemaInfo& x){return x.className == "Metadata" && x.methodName.size();}) != _serializer->_schemaList.end());
-    // assert(std::search(_serializer->_schemaList.begin(), _serializer->_schemaList.end(), [this](const SchemaInfo& x){return x.className == _className && x.methodName.size();}) != _serializer->_schemaList.end());
     setupInstance();
 }
 
@@ -839,7 +824,6 @@ void Client::setupInstance() {
             continue;
         }
         methodIndex++;
-        // TODO: for (auto item : getMethods(_schemaList, _className, _classInstance.get())) {
         _proxyInstance->_methodList.push_back(MethodInfo(item.className, 0, item.methodName, nullptr, _serializer->findType(item.methodRequest), _serializer->findType(item.methodResponse), -1));
         auto total = max(_serializer->getSize(item.methodRequest), _serializer->getSize(item.methodResponse));
         auto powerOfTwo = 16;

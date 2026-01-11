@@ -49,8 +49,6 @@ from .common import (
 from .extension import (
     getHeaderMap
 )
-# from typing import TypeAlias, TypeVar, Generic, Type
-# T = TypeVar("T")
 
 
 class Serializer:
@@ -510,7 +508,6 @@ class Server:
         resp = met.methodCall(param)
         assert isinstance(resp, respType)
         respJson = self.serializer.toJson(met.methodParams[1], resp)
-        # print('---CALL', parts, param, resp)
         respBuf = json.dumps(respJson).encode("utf-8")
         return (
             f"HTTP/1.1 200 OK\r\n"

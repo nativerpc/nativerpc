@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QueryInfo = exports.SchemaFileInfo = exports.Service = exports.Connection = exports.MethodInfo = exports.FieldInfo = exports.SchemaInfo = exports.COMMON_TYPES = exports.CONFIG_NAME = void 0;
+exports.Service = exports.Connection = exports.MethodInfo = exports.FieldInfo = exports.SchemaInfo = exports.COMMON_TYPES = exports.CONFIG_NAME = void 0;
 exports.verifyPython = verifyPython;
 exports.getProjectName = getProjectName;
 exports.getProjectPath = getProjectPath;
@@ -49,6 +49,7 @@ exports.getShellId = getShellId;
  *
  *      CONFIG_NAME
  *      COMMON_TYPES
+ *
  *      SchemaInfo
  *      FieldInfo
  *      MethodInfo
@@ -63,14 +64,11 @@ exports.getShellId = getShellId;
  *      getMessageFiles
  *      parseSchemaList
  *      getShellId
- *
- *      SchemaFileInfo
- *      QueryInfo
  */
-var assert = require('node:assert');
-var fs = require('node:fs');
-var path = require('node:path');
-var spawnSync = require('node:child_process').spawnSync;
+var node_assert_1 = require("node:assert");
+var fs = require("node:fs");
+var path = require("node:path");
+var node_child_process_1 = require("node:child_process");
 exports.CONFIG_NAME = 'workspace.json';
 exports.COMMON_TYPES = {
     'dict': Object,
@@ -91,8 +89,8 @@ var SchemaInfo = /** @class */ (function () {
         this.methodRequest = (_e = options.methodRequest) !== null && _e !== void 0 ? _e : "";
         this.methodResponse = (_f = options.methodResponse) !== null && _f !== void 0 ? _f : "";
         this.idNumber = (_g = options.idNumber) !== null && _g !== void 0 ? _g : -1;
-        assert(this.className);
-        assert(this.methodName || this.fieldName);
+        (0, node_assert_1.strict)(this.className);
+        (0, node_assert_1.strict)(this.methodName || this.fieldName);
     }
     return SchemaInfo;
 }());
@@ -105,8 +103,8 @@ var FieldInfo = /** @class */ (function () {
         this.fieldName = (_c = options.fieldName) !== null && _c !== void 0 ? _c : '';
         this.fieldType = (_d = options.fieldType) !== null && _d !== void 0 ? _d : '';
         this.idNumber = (_e = options.idNumber) !== null && _e !== void 0 ? _e : -1;
-        assert(this.className);
-        assert(this.fieldName);
+        (0, node_assert_1.strict)(this.className);
+        (0, node_assert_1.strict)(this.fieldName);
     }
     return FieldInfo;
 }());
@@ -122,10 +120,10 @@ var MethodInfo = /** @class */ (function () {
         this.methodRequest = options.methodRequest;
         this.methodResponse = options.methodResponse;
         this.idNumber = (_d = options.idNumber) !== null && _d !== void 0 ? _d : -1;
-        assert(this.classInstance);
-        assert(this.methodCall);
-        assert(this.methodRequest);
-        assert(this.methodResponse);
+        (0, node_assert_1.strict)(this.classInstance);
+        (0, node_assert_1.strict)(this.methodCall);
+        (0, node_assert_1.strict)(this.methodRequest);
+        (0, node_assert_1.strict)(this.methodResponse);
     }
     return MethodInfo;
 }());
@@ -160,7 +158,7 @@ var Service = /** @class */ (function () {
     Service.prototype.getMetadata = function (param) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                assert(false);
+                (0, node_assert_1.strict)(false);
                 return [2 /*return*/, {}];
             });
         });
@@ -181,7 +179,7 @@ var Service = /** @class */ (function () {
 }());
 exports.Service = Service;
 function verifyPython() {
-    var _a = spawnSync('python', ['--version']), status = _a.status, stdout = _a.stdout, stderr = _a.stderr;
+    var _a = (0, node_child_process_1.spawnSync)('python', ['--version']), status = _a.status, stdout = _a.stdout, stderr = _a.stderr;
     if (status !== 0) {
         console.error('Failed to find python');
         process.exit(1);
@@ -225,45 +223,23 @@ function getEntryPoint() {
 function getMessageFiles(projectPath) {
     var schemaName = "common";
     var result = [path.join(projectPath, "src", schemaName + ".ts")];
-    assert(fs.existsSync(result[0]));
+    (0, node_assert_1.strict)(fs.existsSync(result[0]));
     return result;
 }
 function parseSchemaList(file) {
-    var _a = spawnSync('python', [
+    var _a = (0, node_child_process_1.spawnSync)('python', [
         '-u',
         path.join(__dirname, 'parser.py'),
         file
     ]), status = _a.status, stdout = _a.stdout, stderr = _a.stderr;
-    // console.log(1111, stdout.toString())
-    // console.log(2222, stderr.toString())
-    assert(status === 0);
+    (0, node_assert_1.strict)(status === 0);
     return JSON.parse(stdout.toString());
 }
 function getShellId() {
-    var _a = spawnSync('python', [
+    var _a = (0, node_child_process_1.spawnSync)('python', [
         '-c',
         "import psutil; import os; print(':'.join([str(x.pid) for x in psutil.Process(os.getppid()).parent().parent().parents()]))",
     ]), status = _a.status, stdout = _a.stdout, stderr = _a.stderr;
-    assert(status === 0);
+    (0, node_assert_1.strict)(status === 0);
     return stdout.toString();
 }
-var SchemaFileInfo = /** @class */ (function () {
-    function SchemaFileInfo(_a) {
-        var projectName = _a.projectName, projFiles = _a.projFiles, schemaFile = _a.schemaFile;
-        this.projectName = projectName;
-        this.projFiles = projFiles;
-        this.schemaFile = schemaFile;
-    }
-    return SchemaFileInfo;
-}());
-exports.SchemaFileInfo = SchemaFileInfo;
-var QueryInfo = /** @class */ (function () {
-    function QueryInfo(_a) {
-        var port = _a.port, promise = _a.promise, queryResult = _a.queryResult;
-        this.port = port;
-        this.promise = promise;
-        this.queryResult = queryResult;
-    }
-    return QueryInfo;
-}());
-exports.QueryInfo = QueryInfo;

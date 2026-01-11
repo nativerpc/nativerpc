@@ -3,6 +3,7 @@
  * 
  *      CONFIG_NAME
  *      COMMON_TYPES
+ * 
  *      SchemaInfo
  *      FieldInfo
  *      MethodInfo
@@ -17,15 +18,12 @@
  *      getMessageFiles
  *      parseSchemaList
  *      getShellId
- * 
- *      SchemaFileInfo
- *      QueryInfo
  */
 import { strict as assert } from "node:assert";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { spawnSync } from "node:child_process";
-import { 
+import {
     type ClassType
 } from "./extension";
 
@@ -230,8 +228,6 @@ export function parseSchemaList(file) {
             file
         ]
     );
-    // console.log(1111, stdout.toString())
-    // console.log(2222, stderr.toString())
     assert(status === 0);
     return JSON.parse(stdout.toString());
 }
@@ -246,28 +242,4 @@ export function getShellId() {
     );
     assert(status === 0);
     return stdout.toString();
-}
-
-export class SchemaFileInfo {
-    projectName: string;
-    projFiles: string[];
-    schemaFile: string;
-
-    constructor({ projectName, projFiles, schemaFile }) {
-        this.projectName = projectName;
-        this.projFiles = projFiles;
-        this.schemaFile = schemaFile;
-    }
-}
-
-export class QueryInfo {
-    port: number;
-    promise: any;
-    queryResult: any;
-
-    constructor({ port, promise, queryResult }) {
-        this.port = port;
-        this.promise = promise;
-        this.queryResult = queryResult;
-    }
 }

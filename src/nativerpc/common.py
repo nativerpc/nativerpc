@@ -3,6 +3,7 @@
 #
 #       CONFIG_NAME
 #       COMMON_TYPES
+#
 #       SchemaInfo
 #       FieldInfo
 #       MethodInfo
@@ -36,6 +37,9 @@ COMMON_TYPES = {
     "float": float,
     "list": list,
 }
+
+SERVICE: Final = "service"
+HOST: Final = "host"
 
 
 class SchemaInfo:
@@ -90,13 +94,9 @@ class MethodInfo:
         self.idNumber = kwargs["idNumber"]
 
 
-SERVICE: Final = "service"
-HOST: Final = "host"
-
 class Options(TypedDict):
     service: type
     host: tuple[str, int]
-
 
 
 class Connection:
@@ -190,12 +190,6 @@ def getEntryPoint():
 
 
 def getMessageFiles(projectPath):
-    # TODO
-    #   settings = None
-    #   with open(os.path.join(package_dir, 'workspace.json'), 'rt') as file:
-    #       settings = json.load(file)
-    #   for schemaName in settings.get('schemaNames', ['common']):
-    #       full = os.path.join(getProjectPath(), "src", schemaName + ".py")
     schemaName = "common"
     result = [os.path.join(projectPath, "src", schemaName + ".py")]
     assert os.path.exists(result[0])

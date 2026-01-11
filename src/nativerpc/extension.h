@@ -83,8 +83,7 @@ class DLL_EXPORT Typing {
 DLL_EXPORT void terminateWithTrace();
 DLL_EXPORT std::string getTempFileName(std::string);
 DLL_EXPORT void execShell(std::string command);
-DLL_EXPORT std::string execProcess(std::string command, std::string cwd, bool allowFail=false);
-
+DLL_EXPORT std::string execProcess(std::string command, std::string cwd, bool allowFail = false);
 DLL_EXPORT void leftTrim(std::string &s);
 DLL_EXPORT void rightTrim(std::string &s);
 DLL_EXPORT int findStringIC(const std::string &text, const std::string &needle, int start, bool allowMissing);
@@ -98,7 +97,6 @@ DLL_EXPORT std::string replaceAll(std::string str, const std::string &from, cons
 DLL_EXPORT std::vector<std::string> splitString(const std::string &str, std::string delimiter, int maxCount = 0);
 DLL_EXPORT std::string joinString(std::vector<std::string> parts, std::string delimiter, int start = 0, int last = -1);
 DLL_EXPORT std::map<std::string, std::string> getHeaderMap(std::string headers, std::vector<std::string> names);
-
 DLL_EXPORT std::tuple<std::string, std::string, nlohmann::json> makeRequest(int socket, std::string req);
 DLL_EXPORT void setEnvVar(std::string name, std::string value);
 

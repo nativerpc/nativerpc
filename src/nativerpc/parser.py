@@ -329,10 +329,6 @@ class PythonParser:
                         blockIndent=self.pathList[self.pathIndex].blockIndent,
                     ))
                 self.lineIndex = endIndex + 1
-                # if self.currentWord is not None:
-                #     self.addNodeWord()
-                # if self.nodeList[self.pathIndex]
-                #     self.addNodeDict(NodeType.ARGUMENT if char == ',' else NodeType.STATEMENT)
                 continue
 
             # Newline whitespace
@@ -674,10 +670,6 @@ class TypescriptParser:
                         blockIndent=self.pathList[self.pathIndex].blockIndent,
                     ))
                 self.lineIndex = endIndex + 2
-                # if self.currentWord is not None:
-                #     self.addNodeWord()
-                # if self.nodeList[self.pathIndex]
-                #     self.addNodeDict(NodeType.ARGUMENT if char == ',' else NodeType.STATEMENT)
                 continue
 
             # Scope starts and ends
@@ -970,10 +962,6 @@ class CppParser:
                         blockIndent=self.pathList[self.pathIndex].blockIndent,
                     ))
                 self.lineIndex = endIndex + 2
-                # if self.currentWord is not None:
-                #     self.addNodeWord()
-                # if self.nodeList[self.pathIndex]
-                #     self.addNodeDict(NodeType.ARGUMENT if char == ',' else NodeType.STATEMENT)
                 continue
 
             # Scope starts and ends
@@ -1247,10 +1235,6 @@ if __name__ == "__main__":
     file = sys.argv[1]
     assert file
     assert os.path.exists(file)
-    # print(f'Reading: {file}', file=sys.stderr)
     result, scene = parseSchemaScene(file)
-    # print(f'Types: {len(result)}', file=sys.stderr)
-    # print(f'Tree: {len(scene.children)}', file=sys.stderr)
     print('\n'.join(scene.getFormatted('    ')), file=sys.stderr, flush=True)
-    # print('Success', flush=True, file=sys.stderr)
     print(json.dumps(result, indent=4), file=sys.stdout, flush=True)

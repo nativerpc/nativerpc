@@ -1,6 +1,9 @@
 /**
  *  Native RPC Manager
  * 
+ *      SchemaFileInfo
+ *      QueryInfo
+ * 
  *      Manager
  *          constructor
  *          getSettings
@@ -27,9 +30,24 @@ const fs = require('node:fs');
 const path = require('node:path');
 const spawnSync = require('node:child_process').spawnSync;
 const chalk = require('chalk').default;
-const { CONFIG_NAME, SchemaInfo, verifyPython, SchemaFileInfo, QueryInfo } = require('./common');
+const { CONFIG_NAME, SchemaInfo, verifyPython } = require('./common');
 const TEST_MODE = false;
 
+class SchemaFileInfo {
+    constructor({ projectName, projFiles, schemaFile }) {
+        this.projectName = projectName;
+        this.projFiles = projFiles;
+        this.schemaFile = schemaFile;
+    }
+}
+
+class QueryInfo {
+    constructor({ port, promise, queryResult }) {
+        this.port = port;
+        this.promise = promise;
+        this.queryResult = queryResult;
+    }
+}
 
 class Manager {
     constructor() {
@@ -161,8 +179,6 @@ class Manager {
                     file.schemaFile,
                 ]
             );
-            // console.log(stdout.toString())
-            // console.log(stderr.toString())
             assert(status === 0);
             for (const item of JSON.parse(stdout.toString())) {
                 this.schemaList.push(new SchemaInfo({

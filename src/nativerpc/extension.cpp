@@ -70,30 +70,17 @@ void terminateWithTrace() {
         std::stacktrace st = std::stacktrace::current(0);
         std::cerr << st << std::endl;
     }
-    // std::abort();
     std::exit(-1);
 }
 
 class TerminateWithTrace {
   public:
     TerminateWithTrace() {
-        // std::cout << "Set terminate!" << std::endl;
         _CrtSetReportHook(&TerminateWithTrace::terminateWithException);
         _CrtSetReportMode(_CRT_ASSERT, 0);
         _CrtSetReportMode(_CRT_ERROR, 0);
         _CrtSetReportMode(_CRT_WARN, 0);
-        // _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
-        // _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
-        // _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
-        // _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
         std::set_terminate(terminateWithTrace);
-
-        // HANDLE stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        // DWORD originalAttributes;
-        // GetConsoleScreenBufferInfo(stdOut, &originalAttributes); // Save original
-        // SetConsoleTextAttribute(stdOut, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-        // SetConsoleTextAttribute(stdOut, FOREGROUND_RED | BACKGROUND_BLUE);
-        // SetConsoleTextAttribute(stdOut, originalAttributes)
     }
 
     static int terminateWithException(int reportType, char *message, int *returnValue) {
@@ -264,18 +251,13 @@ std::string replaceAll(std::string str, const std::string &from, const std::stri
 
 std::vector<std::string> splitString(const std::string &str, std::string delimiter, int maxCount) {
     std::vector<std::string> tokens;
-    size_t idx1 = 0;
-    size_t idx2 = 0;
-    while ((idx2 = str.find(delimiter, idx1)) != std::string::npos && (maxCount <= 0 || tokens.size() + 1 < maxCount)) {
-        tokens.push_back(str.substr(idx1, idx2 - idx1));
-        idx1 = idx2 + delimiter.length();
+    size_t startIndex = 0;
+    size_t endIndex = 0;
+    while ((endIndex = str.find(delimiter, startIndex)) != std::string::npos && (maxCount <= 0 || tokens.size() + 1 < maxCount)) {
+        tokens.push_back(str.substr(startIndex, endIndex - startIndex));
+        startIndex = endIndex + delimiter.length();
     }
-    tokens.push_back(str.substr(idx1));
-    // std::string token;
-    // std::stringstream ss(str);
-    // while (std::getline(ss, token, delimiter)) {
-    //     tokens.push_back(token);
-    // }
+    tokens.push_back(str.substr(startIndex));
     return tokens;
 }
 
@@ -293,14 +275,14 @@ std::string joinString(std::vector<std::string> parts, std::string delimiter, in
 std::map<std::string, std::string> getHeaderMap(std::string headers, std::vector<std::string> names) {
     std::map<std::string, std::string> result;
     for (auto name : names) {
-        auto hdr_name = name + ":";
-        if (findStringIC(headers, hdr_name, 0, true) == -1) {
+        auto colonName = name + ":";
+        if (findStringIC(headers, colonName, 0, true) == -1) {
             result[name] = "";
             continue;
         }
-        auto idx1 = findStringIC(headers, hdr_name, 0, false) + hdr_name.size();
-        auto idx2 = findStringIC(headers, "\n", idx1, true);
-        result[name] = getSubString(headers, idx1, idx2 != -1 ? idx2 : headers.length(), true);
+        auto startIndex = findStringIC(headers, colonName, 0, false) + colonName.size();
+        auto endIndex = findStringIC(headers, "\n", startIndex, true);
+        result[name] = getSubString(headers, startIndex, endIndex != -1 ? endIndex : headers.length(), true);
     }
     return result;
 }
@@ -323,8 +305,7 @@ std::tuple<std::string, std::string, nlohmann::json> makeRequest(int socket, std
             readBuffer.insert(readBuffer.end(), inputBuffer, inputBuffer + received);
         }
         auto middleIndex = received > 0 ? findIndex(readBuffer, "\r\n\r\n") : -1;
-        // std::cout<<"---waiting "<< readBuffer.size() << ", " << middleIndex<<std::endl;
-        
+
         // Parse headers and payload
         headers = "";
         status = std::make_tuple(std::string(), std::string());
@@ -349,7 +330,7 @@ std::tuple<std::string, std::string, nlohmann::json> makeRequest(int socket, std
         if (received < 0) {
             if (WSAGetLastError() == WSA_WAIT_TIMEOUT) {
                 // pass
-            }  else {
+            } else {
                 throw std::runtime_error(std::string() + "Server socket closed, code=" + std::to_string(WSAGetLastError()));
             }
         } else if (received == 0) {
@@ -361,16 +342,16 @@ std::tuple<std::string, std::string, nlohmann::json> makeRequest(int socket, std
 }
 
 void setEnvVar(std::string name, std::string value) {
-    #if defined(__unix__) || defined(__APPLE__)
-        if (setenv(name.c_str(), value.c_str(), 1) != 0) {
-            std::cerr << "Failed to set environment variable (setenv)" << std::endl;
-        }
-    #elif defined(_WIN32)
-        if (_putenv_s(name.c_str(), value.c_str()) != 0) {
-            std::cerr << "Failed to set environment variable (_putenv_s)" << std::endl;
-        }
-    #else
-        std::cerr << "Environment variable setting not supported on this platform" << std::endl;
-    #endif
+#if defined(__unix__) || defined(__APPLE__)
+    if (setenv(name.c_str(), value.c_str(), 1) != 0) {
+        std::cerr << "Failed to set environment variable (setenv)" << std::endl;
+    }
+#elif defined(_WIN32)
+    if (_putenv_s(name.c_str(), value.c_str()) != 0) {
+        std::cerr << "Failed to set environment variable (_putenv_s)" << std::endl;
+    }
+#else
+    std::cerr << "Environment variable setting not supported on this platform" << std::endl;
+#endif
 }
 } // namespace nativerpc

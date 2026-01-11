@@ -7,7 +7,7 @@
  *      SocketReceiver
  */
 const assert = require('node:assert');
-import {IncomingHttpHeaders} from 'http';
+import { IncomingHttpHeaders } from 'http';
 
 export type ClassType<T> = new (...args: any[]) => T;
 
@@ -16,23 +16,23 @@ export function getHeaderMap(headers: string | IncomingHttpHeaders, names: strin
     if (typeof headers === 'string') {
         headers = headers.toLowerCase();
         for (const name of names) {
-            const hdr_name = name.toLowerCase() + ":";
-            if (headers.indexOf(hdr_name) === -1) {
+            const colonName = name.toLowerCase() + ":";
+            if (headers.indexOf(colonName) === -1) {
                 result[name] = "";
                 continue;
             }
-            const idx1 = headers.indexOf(hdr_name) + hdr_name.length;
-            const idx2 = headers.indexOf("\n", idx1)
-            result[name] = headers.substring(idx1, idx2 !== -1 ? idx2 : undefined).trim();
+            const startIndex = headers.indexOf(colonName) + colonName.length;
+            const endIndex = headers.indexOf("\n", startIndex)
+            result[name] = headers.substring(startIndex, endIndex !== -1 ? endIndex : undefined).trim();
         }
     } else {
         for (const name of names) {
-            const hdr_name = name.toLowerCase();
-            if (!(headers[hdr_name] ?? headers[name])) {
+            const lowerName = name.toLowerCase();
+            if (!(headers[lowerName] ?? headers[name])) {
                 result[name] = "";
                 continue;
             }
-            result[name] = headers[hdr_name] ?? headers[name];
+            result[name] = headers[lowerName] ?? headers[name];
         }
     }
     return result;
@@ -68,13 +68,16 @@ export class SocketReceiver {
         this.socket = null;
         this.closed = false;
     }
+
     connect(socket) {
         this.socket = socket;
         this.preConnected = true;
     }
+
     setConnected() {
         this.connected = true;
     }
+
     async waitConnected1() {
         while (true) {
             if (this.preConnected || this.closed || (this.socket && this.socket.closed)) {
@@ -83,6 +86,7 @@ export class SocketReceiver {
             await new Promise((resolve) => { setTimeout(resolve, 50) });
         }
     }
+
     async waitConnected() {
         while (true) {
             if (this.connected || this.closed || (this.socket && this.socket.closed)) {
@@ -91,6 +95,7 @@ export class SocketReceiver {
             await new Promise((resolve) => { setTimeout(resolve, 50) });
         }
     }
+
     data(value) {
         if (!this.waiter) {
             throw new Error('No receiver in SocketReceiver')
@@ -115,14 +120,15 @@ export class SocketReceiver {
         const statusMsg = first2.slice(2).join(' ');
         const w = this.waiter;
         this.waiter = null;
-        w.continue({ 
+        w.continue({
             status,
             headers,
             body: body2,
             error: null,
         });
     }
-    async wait(id): Promise<{status: number, headers: string, body: any, error: string}> {
+
+    async wait(id): Promise<{ status: number, headers: string, body: any, error: string }> {
         if (!this.preConnected && !this.closed && !this.socket.closed) {
             throw new Error(`Connection missing`);
         }
@@ -139,15 +145,15 @@ export class SocketReceiver {
         if (this.waiter) {
             throw new Error(`Duplicate receiver in SocketReceiver, id=${id}`);
         }
-        return await new Promise<{status: number, headers: string, body: any, error: string}>(
+        return await new Promise<{ status: number, headers: string, body: any, error: string }>(
             (resolve, reject) => {
                 this.waiter = {
                     active: true,
                     continue: ({ status, headers, body, error }) => {
-                        resolve({ 
-                            status, 
-                            headers, 
-                            body, 
+                        resolve({
+                            status,
+                            headers,
+                            body,
                             error
                         })
                     },
@@ -158,6 +164,7 @@ export class SocketReceiver {
             }
         );
     }
+
     end() {
         this.closed = true;
         if (!this.waiter) {
@@ -166,12 +173,13 @@ export class SocketReceiver {
         const w = this.waiter;
         this.waiter = null;
         w.continue({
-            status: 502, 
-            headers: '', 
-            body: null, 
+            status: 502,
+            headers: '',
+            body: null,
             error: 'Socket closed'
         });
     }
+
     error(err) {
         this.closed = true;
         if (!this.waiter) {
@@ -180,9 +188,9 @@ export class SocketReceiver {
         const w = this.waiter;
         this.waiter = null;
         w.continue({
-            status: 503, 
-            headers: '', 
-            body: null, 
+            status: 503,
+            headers: '',
+            body: null,
             error: err
         });
     }

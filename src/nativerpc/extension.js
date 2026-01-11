@@ -55,25 +55,25 @@ function getHeaderMap(headers, names) {
         headers = headers.toLowerCase();
         for (var _i = 0, names_1 = names; _i < names_1.length; _i++) {
             var name_1 = names_1[_i];
-            var hdr_name = name_1.toLowerCase() + ":";
-            if (headers.indexOf(hdr_name) === -1) {
+            var colonName = name_1.toLowerCase() + ":";
+            if (headers.indexOf(colonName) === -1) {
                 result[name_1] = "";
                 continue;
             }
-            var idx1 = headers.indexOf(hdr_name) + hdr_name.length;
-            var idx2 = headers.indexOf("\n", idx1);
-            result[name_1] = headers.substring(idx1, idx2 !== -1 ? idx2 : undefined).trim();
+            var startIndex = headers.indexOf(colonName) + colonName.length;
+            var endIndex = headers.indexOf("\n", startIndex);
+            result[name_1] = headers.substring(startIndex, endIndex !== -1 ? endIndex : undefined).trim();
         }
     }
     else {
         for (var _c = 0, names_2 = names; _c < names_2.length; _c++) {
             var name_2 = names_2[_c];
-            var hdr_name = name_2.toLowerCase();
-            if (!((_a = headers[hdr_name]) !== null && _a !== void 0 ? _a : headers[name_2])) {
+            var lowerName = name_2.toLowerCase();
+            if (!((_a = headers[lowerName]) !== null && _a !== void 0 ? _a : headers[name_2])) {
                 result[name_2] = "";
                 continue;
             }
-            result[name_2] = (_b = headers[hdr_name]) !== null && _b !== void 0 ? _b : headers[name_2];
+            result[name_2] = (_b = headers[lowerName]) !== null && _b !== void 0 ? _b : headers[name_2];
         }
     }
     return result;
@@ -183,6 +183,9 @@ var SocketReceiver = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!this.preConnected && !this.closed && !this.socket.closed) {
+                            throw new Error("Connection missing");
+                        }
                         if (!this.preConnected || this.closed || this.socket.closed) {
                             return [2 /*return*/, {
                                     status: 501,

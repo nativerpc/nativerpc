@@ -9,6 +9,7 @@
  *      MethodInfo
  *      Options
  *      Connection
+ *      ServiceHolder
  *      Service
  *
  *      verifyPython
@@ -19,7 +20,6 @@
  *      parseSchemaList
  *      getShellId
  */
-
 #pragma once
 #pragma pack(1)
 #include "extension.h"
@@ -135,7 +135,6 @@ template <class T> class Service : public T {
     nlohmann::json getMetadata(nlohmann::json param) {
         assert(_parent);
         assert(_parent == _parent->_self);
-        std::cout<<"5555 "<<param<<std::endl;
         return _parent->clientCall("Metadata", "getMetadata", param);
     }
   public:
