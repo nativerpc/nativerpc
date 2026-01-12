@@ -21,20 +21,21 @@
 ##
 import __main__
 import os
-from . import parser
 import psutil
 import subprocess
 import sys
 from typing import TypedDict, Final
 
+from . import parser
+
 CONFIG_NAME = "workspace.json"
 
 COMMON_TYPES = {
-    "dict": dict,
-    "str": str,
-    "bool": bool,
     "int": int,
     "float": float,
+    "str": str,
+    "bool": bool,
+    "dict": dict,
     "list": list,
 }
 

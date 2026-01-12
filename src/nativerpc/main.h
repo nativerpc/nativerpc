@@ -2,7 +2,7 @@
  *  Native RPC Main
  *
  *      Serializer
- *          constructor
+ *          Serializer
  *          findType
  *          getFields
  *          getMethods
@@ -43,10 +43,8 @@ class DLL_EXPORT Serializer {
     std::vector<FieldInfo> getFields(std::string name);
     std::vector<MethodInfo> getMethods(std::string className, Any *classInstance);
     std::vector<MethodInfo> getMethods(std::string className, Any *classInstance, std::map<std::string, AnyMethod> methods);
-
     int getSize(std::string typeName);
     void getSize(std::string typeName, std::vector<uint8_t> &buffer);
-
     nlohmann::json toJson(std::string typeName, const Any *obj);
     nlohmann::json toJson(std::string typeName, std::vector<uint8_t> &obj);
     template <int SIZE> nlohmann::json toJson(std::string typeName, const std::array<uint8_t, SIZE> &data) {
@@ -77,10 +75,9 @@ class DLL_EXPORT Serializer {
         fromJson(name, data, reinterpret_cast<Any *>(&result));
         return result;
     }
+
     void fromJson(std::string typeName, nlohmann::json data, Any *obj);
-
     void fromJson(std::string typeName, nlohmann::json data, std::vector<uint8_t> &obj);
-
     void createInstance(std::string className, std::vector<uint8_t> &data);
     template <int SIZE> void createInstance(std::string className, std::array<uint8_t, SIZE> &data) {
         int total = getSize(className);
@@ -105,7 +102,7 @@ class DLL_EXPORT Serializer {
     std::vector<std::string> _modules;
     std::vector<SchemaInfo> _schemaList;
     std::map<std::string, std::vector<FieldInfo>> _fieldList;
-    bool _verbose{false};
+    bool _verbose;
 };
 
 class DLL_EXPORT Server {

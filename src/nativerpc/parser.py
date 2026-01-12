@@ -36,12 +36,11 @@
 #       parseSchemaList
 #       __main__
 ##
-from enum import Enum
-from typing import Self
 import sys
 import json
 import os
-sys.path.append(os.path.dirname(__file__))
+from enum import Enum
+from typing import Self
 
 
 class Color:

@@ -83,17 +83,17 @@ export class Serializer {
         }
 
         // Read class metadata
-        for (const item of getMessageFiles(getProjectPath())) {
-            for (const item2 of parseSchemaList(item)) {
+        for (const file of getMessageFiles(getProjectPath())) {
+            for (const item of parseSchemaList(file)) {
                 this.schemaList.push(new SchemaInfo({
                     projectName: "",
-                    className: item2.className,
-                    fieldName: item2.fieldName,
-                    fieldType: item2.fieldType,
-                    methodName: item2.methodName,
-                    methodRequest: item2.methodRequest,
-                    methodResponse: item2.methodResponse,
-                    idNumber: item2.idNumber,
+                    className: item.className,
+                    fieldName: item.fieldName,
+                    fieldType: item.fieldType,
+                    methodName: item.methodName,
+                    methodRequest: item.methodRequest,
+                    methodResponse: item.methodResponse,
+                    idNumber: item.idNumber,
                 }));
             }
         }
@@ -192,12 +192,12 @@ export class Serializer {
     getSize(name) {
         if (COMMON_TYPES[name]) {
             return (
-                name == "dict" ? 8 :
-                name == "str" ? 8 :
-                name == "list" ? 8 :
                 name == "int" ? 4 :
                 name == "float" ? 4 :
+                name == "str" ? 8 :
                 name == "bool" ? 1 :
+                name == "dict" ? 8 :
+                name == "list" ? 8 :
                 0
             );
         }
@@ -378,20 +378,20 @@ export class Server {
                 req.on('end', () => {
                     // Parse headers and payload
                     const url = req.url;
-                    const headers = getHeaderMap(
+                    const headerMap = getHeaderMap(
                         req.headers,
                         ["Content-Length", "Project-Id", "Sender-Id"]
                     )
-                    assert(parseInt(headers['Content-Length']) == connection.readBuffer.length);
+                    assert(parseInt(headerMap['Content-Length']) == connection.readBuffer.length);
                     const payload = JSON.parse(connection.readBuffer);
                     connection.readBuffer = '';
                     assert(req.method == 'POST');
                     connection.wtime = Date.now() / 1000;
                     connection.messageCount += 1
-                    connection.senderId = headers["Sender-Id"]
+                    connection.senderId = headerMap["Sender-Id"]
                     connection.callId = url
-                    if (headers["Project-Id"]) {
-                        connection.projectId = headers["Project-Id"];     // normally populated in connectClient
+                    if (headerMap["Project-Id"]) {
+                        connection.projectId = headerMap["Project-Id"];     // normally populated in connectClient
                     }
 
                     // Process message
@@ -492,8 +492,7 @@ export class Server {
         const respType = COMMON_TYPES[met.methodResponse] ?? this.serializer.fieldList[met.methodResponse][0].classType;
         const resp = await met.methodCall.apply(met.classInstance, [param])
         assert(resp instanceof respType);
-        const respJson = this.serializer.toJson(met.methodResponse, resp);
-        return respJson;
+        return this.serializer.toJson(met.methodResponse, resp);
     }
 
     connectClient(param: object) {

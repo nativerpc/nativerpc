@@ -46,11 +46,11 @@ namespace nativerpc {
 std::string CONFIG_NAME = "workspace.json";
 
 std::map<std::string, ClassType> COMMON_TYPES = {
-    {"dict", ClassType("dict", false, sizeof(nlohmann::json))},
-    {"str", ClassType("str", false, sizeof(std::string))},
-    {"bool", ClassType("bool", false, sizeof(bool))}, 
     {"int", ClassType("int", false, sizeof(int))},    
     {"float", ClassType("float", false, sizeof(float))},   
+    {"str", ClassType("str", false, sizeof(std::string))},
+    {"bool", ClassType("bool", false, sizeof(bool))}, 
+    {"dict", ClassType("dict", false, sizeof(nlohmann::json))},
     {"list", ClassType("list", false, sizeof(nlohmann::json))},
 };
 

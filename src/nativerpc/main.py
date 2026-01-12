@@ -40,6 +40,7 @@ import select
 import time
 import traceback
 import requests.adapters
+
 from .common import (
     CONFIG_NAME, COMMON_TYPES,
     SchemaInfo, FieldInfo, MethodInfo, SERVICE, HOST, Options, Connection, Service,
@@ -78,18 +79,18 @@ class Serializer:
             self.modules.append(importlib.import_module(schemaName, item))
 
         # Read class metadata
-        for item in getMessageFiles(getProjectPath()):
-            schemaList = parseSchemaList(item)
-            for item2 in schemaList:
+        for file in getMessageFiles(getProjectPath()):
+            schemaList = parseSchemaList(file)
+            for item in schemaList:
                 self.schemaList.append(SchemaInfo(
                     projectName="",
-                    className=item2["className"],
-                    fieldName=item2.get("fieldName"),
-                    fieldType=item2.get("fieldType"),
-                    methodName=item2.get("methodName"),
-                    methodRequest=item2.get("methodRequest"),
-                    methodResponse=item2.get("methodResponse"),
-                    idNumber=item2["idNumber"],
+                    className=item["className"],
+                    fieldName=item.get("fieldName"),
+                    fieldType=item.get("fieldType"),
+                    methodName=item.get("methodName"),
+                    methodRequest=item.get("methodRequest"),
+                    methodResponse=item.get("methodResponse"),
+                    idNumber=item["idNumber"],
                 ))
             assert len(schemaList) > 0
 
@@ -140,7 +141,8 @@ class Serializer:
         return result
 
     def getMethods(self, classType, classInstance, className):
-        assert classType == Server or issubclass(classType, self.findType(classType.__bases__[0].__name__, True)), f"Unknown subclass: {classType.__bases__[0].__name__}, {classType}"
+        assert classType == Server or issubclass(classType, self.findType(
+            classType.__bases__[0].__name__, True)), f"Unknown subclass: {classType.__bases__[0].__name__}, {classType}"
         result = []
         assert [x for x in self.schemaList if x.className == className and x.methodName]
         for methodInfo in self.schemaList:
@@ -162,12 +164,12 @@ class Serializer:
     def getSize(self, name):
         if name in COMMON_TYPES:
             result = (
-                8 if name == "dict" else
-                8 if name == "str" else
-                8 if name == "list" else
                 4 if name == "int" else
                 4 if name == "float" else
+                8 if name == "str" else
                 1 if name == "bool" else
+                8 if name == "dict" else
+                8 if name == "list" else
                 0
             )
             return result
@@ -371,7 +373,7 @@ class Server:
                             f'Adding client: {len(self.activeConnections)}, '
                             f'{len(self.clientSockets)}, {len(self.closedConnections)}'
                         )
-                
+
                 # Read
                 else:
                     # Read chunk
@@ -384,7 +386,7 @@ class Server:
                         closeEvent = 1
 
                     # Parse headers and payload
-                    headers = None
+                    headerMap = None
                     url = None
                     middle = None
                     contentLen = None
@@ -393,23 +395,23 @@ class Server:
                         pass
                     elif b"\r\n\r\n" in data:
                         middle = data.index(b'\r\n\r\n') + len(b'\r\n\r\n')
-                        headers = getHeaderMap(
+                        headerMap = getHeaderMap(
                             data[0: middle].decode(),
                             ["Content-Length", "Project-Id", "Sender-Id"]
                         )
                         parts = [x.strip() for x in data[0: data.index(b'\n')].decode().split(' ') if x.strip()]
                         assert len(parts) == 3
                         url = parts[1]
-                        contentLen = int(headers["Content-Length"])
+                        contentLen = int(headerMap["Content-Length"])
                         if middle + contentLen <= len(data):
                             connection.readBuffer = data[middle+contentLen:]
                             payload = json.loads(data[middle: middle+contentLen].decode())
                             connection.wtime = time.time()
                             connection.messageCount += 1
-                            connection.senderId = headers["Sender-Id"]
+                            connection.senderId = headerMap["Sender-Id"]
                             connection.callId = url
-                            if headers["Project-Id"]:
-                                connection.projectId = headers["Project-Id"]     # normally populated in connectClient
+                            if headerMap["Project-Id"]:
+                                connection.projectId = headerMap["Project-Id"]     # normally populated in connectClient
                         else:
                             connection.readBuffer = data
                     else:
@@ -424,7 +426,7 @@ class Server:
                         try:
                             self.currentConnection = connection
                             buf = self.serverCall(url, payload)
-                            
+
                         # Process error
                         except Exception as ex:
                             if self.verbose:
@@ -680,8 +682,8 @@ class Client:
         )
         resp.raise_for_status()
         assert resp.status_code == 200
-        resp2 = resp.json()
-        self.connectionId = resp2["connectionId"]
+        data = resp.json()
+        self.connectionId = data["connectionId"]
 
     def setupInstance(self):
         assert [x for x in self.serializer.schemaList if x.className == self.className and x.methodName]
@@ -739,9 +741,8 @@ class Client:
             raise RuntimeError(
                 f"Client error: {resp.reason}: {details}, code={resp.status_code}"
             )
-        resp2 = resp.json()
-        resp3 = self.serializer.fromJson(resName, resp2)
-        return resp3
+        data = resp.json()
+        return self.serializer.fromJson(resName, data)
 
     def close(self):
         payload = {

@@ -29,11 +29,11 @@ import {
 
 export const CONFIG_NAME = 'workspace.json';
 export const COMMON_TYPES = {
-    'dict': Object,
-    'str': String,
-    'bool': Boolean,
     'int': Number,
     'float': Number,
+    'str': String,
+    'bool': Boolean,
+    'dict': Object,
     'list': Array,
 };
 

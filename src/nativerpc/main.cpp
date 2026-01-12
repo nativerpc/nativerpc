@@ -58,6 +58,11 @@
 namespace nativerpc {
 
 Serializer::Serializer() {
+    _modules.clear();
+    _schemaList.clear();
+    _fieldList.clear();
+    _verbose = false;
+
     // Read settings
     verifyPython();
     auto projectPath = getProjectPath();
@@ -68,9 +73,9 @@ Serializer::Serializer() {
     }
 
     // Read class metadata
-    for (auto item : getMessageFiles(projectPath)) {
-        for (auto item2 : parseSchemaList(item)) {
-            _schemaList.push_back(item2);
+    for (auto file : getMessageFiles(projectPath)) {
+        for (auto item : parseSchemaList(file)) {
+            _schemaList.push_back(item);
         }
     }
 
@@ -186,8 +191,8 @@ nlohmann::json Serializer::toJson(std::string typeName, const Any *obj) {
     if (typeName == "dict") {
         result = nlohmann::json({});
         assert(_fieldList.find(typeName) == _fieldList.end());
-        auto obj2 = reinterpret_cast<const nlohmann::json *>(obj);
-        for (auto &kv : obj2->items()) {
+        auto data = reinterpret_cast<const nlohmann::json *>(obj);
+        for (auto &kv : data->items()) {
             result[kv.key()] = kv.value();
         }
     } else if (COMMON_TYPES.find(typeName) != COMMON_TYPES.end()) {
@@ -396,6 +401,7 @@ void Server::startServer() {
     _activeConnections.push_back(std::make_shared<Connection>(0, _mainSocket, std::make_pair(_host, _port), getTime(), getTime(), getProjectName(), "/Server/startServer"));
     std::string url;
     std::string headers;
+    std::map<std::string, std::string> headerMap;
     nlohmann::json payload;
     uint8_t inputBuffer[10000] = {0};
     std::ostringstream writeBuffer;
@@ -461,11 +467,12 @@ void Server::startServer() {
                 // Parse headers and payload
                 url = "";
                 headers = "";
+                headerMap.clear();
                 payload = nullptr;
                 if (received > 0 && middleIndex != -1) {
                     headers = std::string((char *)connection->readBuffer.data(), middleIndex);
-                    auto headers2 = getHeaderMap(headers, {"Content-Length", "Project-Id", "Sender-Id"});
-                    auto msgLen = parseInt(headers2["Content-Length"]);
+                    headerMap = getHeaderMap(headers, {"Content-Length", "Project-Id", "Sender-Id"});
+                    auto msgLen = parseInt(headerMap["Content-Length"]);
                     assert(msgLen >= 0);
                     if (middleIndex + 4 + msgLen <= connection->readBuffer.size()) {
                         std::string newLine = "\r\n";
@@ -483,11 +490,11 @@ void Server::startServer() {
 
                         connection->wtime = getTime();
                         connection->messageCount += 1;
-                        connection->senderId = headers2["Sender-Id"];
+                        connection->senderId = headerMap["Sender-Id"];
                         connection->callId = url;
 
-                        if (headers2["Project-Id"].size()) {
-                            connection->projectId = headers2["Project-Id"]; // normally populated in connectClient
+                        if (headerMap["Project-Id"].size()) {
+                            connection->projectId = headerMap["Project-Id"]; // normally populated in connectClient
                         }
                     }
                 }
@@ -579,14 +586,14 @@ void Server::startServer() {
 }
 
 nlohmann::json Server::serverCall(std::string url, nlohmann::json payload) {
-    auto parts2 = splitString(url, "/");
-    if (parts2.size() != 3 || parts2[0] != "") {
+    auto parts = splitString(url, "/");
+    if (parts.size() != 3 || parts[0] != "") {
         throw std::runtime_error("Failed to parse route");
     }
-    if (_methodList.find(parts2[1] + "." + parts2[2]) == _methodList.end()) {
+    if (_methodList.find(parts[1] + "." + parts[2]) == _methodList.end()) {
         throw std::runtime_error("Failed to route");
     }
-    auto met = _methodList[parts2[1] + "." + parts2[2]];
+    auto met = _methodList[parts[1] + "." + parts[2]];
     assert(met.methodPointer ? met.methodIndex == -1 : met.methodIndex >= 0);
     std::vector<uint8_t> param;
     _serializer->createInstance(met.methodRequest.className, param, met.methodResponse.className);
@@ -595,32 +602,32 @@ nlohmann::json Server::serverCall(std::string url, nlohmann::json payload) {
     nlohmann::json result;
 
     if (param.capacity() == 16) {
-        auto method2 = *reinterpret_cast<std::array<uint8_t, 16> (Any::**)(std::array<uint8_t, 16>)>(&method);
-        auto data = ((met.classInstance)->*method2)(*(std::array<uint8_t, 16> *)param.data());
+        auto finalMethod = *reinterpret_cast<std::array<uint8_t, 16> (Any::**)(std::array<uint8_t, 16>)>(&method);
+        auto data = ((met.classInstance)->*finalMethod)(*(std::array<uint8_t, 16> *)param.data());
         result = _serializer->destroyInstanceGet(met.methodResponse.className, data);
     } else if (param.capacity() == 32) {
-        auto method2 = *reinterpret_cast<std::array<uint8_t, 32> (Any::**)(std::array<uint8_t, 32>)>(&method);
-        auto data = ((met.classInstance)->*method2)(*(std::array<uint8_t, 32> *)param.data());
+        auto finalMethod = *reinterpret_cast<std::array<uint8_t, 32> (Any::**)(std::array<uint8_t, 32>)>(&method);
+        auto data = ((met.classInstance)->*finalMethod)(*(std::array<uint8_t, 32> *)param.data());
         result = _serializer->destroyInstanceGet(met.methodResponse.className, data);
     } else if (param.capacity() == 64) {
-        auto method2 = *reinterpret_cast<std::array<uint8_t, 64> (Any::**)(std::array<uint8_t, 64>)>(&method);
-        auto data = ((met.classInstance)->*method2)(*(std::array<uint8_t, 64> *)param.data());
+        auto finalMethod = *reinterpret_cast<std::array<uint8_t, 64> (Any::**)(std::array<uint8_t, 64>)>(&method);
+        auto data = ((met.classInstance)->*finalMethod)(*(std::array<uint8_t, 64> *)param.data());
         result = _serializer->destroyInstanceGet(met.methodResponse.className, data);
     } else if (param.capacity() == 128) {
-        auto method2 = *reinterpret_cast<std::array<uint8_t, 128> (Any::**)(std::array<uint8_t, 128>)>(&method);
-        auto data = ((met.classInstance)->*method2)(*(std::array<uint8_t, 128> *)param.data());
+        auto finalMethod = *reinterpret_cast<std::array<uint8_t, 128> (Any::**)(std::array<uint8_t, 128>)>(&method);
+        auto data = ((met.classInstance)->*finalMethod)(*(std::array<uint8_t, 128> *)param.data());
         result = _serializer->destroyInstanceGet(met.methodResponse.className, data);
     } else if (param.capacity() == 256) {
-        auto method2 = *reinterpret_cast<std::array<uint8_t, 256> (Any::**)(std::array<uint8_t, 256>)>(&method);
-        auto data = ((met.classInstance)->*method2)(*(std::array<uint8_t, 256> *)param.data());
+        auto finalMethod = *reinterpret_cast<std::array<uint8_t, 256> (Any::**)(std::array<uint8_t, 256>)>(&method);
+        auto data = ((met.classInstance)->*finalMethod)(*(std::array<uint8_t, 256> *)param.data());
         result = _serializer->destroyInstanceGet(met.methodResponse.className, data);
     } else if (param.capacity() == 512) {
-        auto method2 = *reinterpret_cast<std::array<uint8_t, 512> (Any::**)(std::array<uint8_t, 512>)>(&method);
-        auto data = ((met.classInstance)->*method2)(*(std::array<uint8_t, 512> *)param.data());
+        auto finalMethod = *reinterpret_cast<std::array<uint8_t, 512> (Any::**)(std::array<uint8_t, 512>)>(&method);
+        auto data = ((met.classInstance)->*finalMethod)(*(std::array<uint8_t, 512> *)param.data());
         result = _serializer->destroyInstanceGet(met.methodResponse.className, data);
     } else if (param.capacity() == 1024) {
-        auto method2 = *reinterpret_cast<std::array<uint8_t, 1024> (Any::**)(std::array<uint8_t, 1024>)>(&method);
-        auto data = ((met.classInstance)->*method2)(*(std::array<uint8_t, 1024> *)param.data());
+        auto finalMethod = *reinterpret_cast<std::array<uint8_t, 1024> (Any::**)(std::array<uint8_t, 1024>)>(&method);
+        auto data = ((met.classInstance)->*finalMethod)(*(std::array<uint8_t, 1024> *)param.data());
         result = _serializer->destroyInstanceGet(met.methodResponse.className, data);
     } else {
         throw std::runtime_error(std::string() + "Too large payload: " + std::to_string(param.capacity()));
@@ -781,7 +788,7 @@ void Client::initSocket() {
         throw std::runtime_error(std::string() + "Failed to set receive timeout, code=" + std::to_string(WSAGetLastError()));
     }
 
-    auto req2 = nlohmann::json({
+    auto payload = nlohmann::json({
         {"projectId", getProjectName()},
         {"clientId", std::to_string(getpid())},
         {"parentId", std::to_string(getpid())},
@@ -795,9 +802,9 @@ void Client::initSocket() {
         << "Connection: keep-alive\r\n"
         << "Server-Id: connect\r\n"
         << "User-Agent: curl/8.16.0\r\n"
-        << "Content-Length: " << req2.size() << "\r\n"
+        << "Content-Length: " << payload.size() << "\r\n"
         << "Content-type: application/problem+json\r\n\r\n"
-        << req2;
+        << payload;
     auto resp = makeRequest(_mainSocket, req.str());
     if (std::get<0>(resp) != "200") {
         throw std::runtime_error("Connection error: " + std::get<1>(resp));
@@ -840,15 +847,15 @@ void Client::setupInstance() {
 }
 
 nlohmann::json Client::clientCall(std::string className, std::string methodName, nlohmann::json data) {
-    auto req2 = data.dump();
+    auto payload = data.dump();
     std::ostringstream req;
     req << "POST /" << className << "/" << methodName << " HTTP/1.1\r\n"
         << "Host: " << _host << ":" << _port << "\r\n"
         << "Accept: */*\r\n"
         << "User-Agent: curl/8.16.0\r\n"
-        << "Content-Length: " << req2.size() << "\r\n"
+        << "Content-Length: " << payload.size() << "\r\n"
         << "Content-type: application/json\r\n\r\n"
-        << req2;
+        << payload;
     auto resp = makeRequest(_mainSocket, req.str());
     if (std::get<0>(resp) != "200") {
         throw std::runtime_error("Client error: " + std::get<1>(resp));
@@ -861,7 +868,7 @@ void Client::close() {
         return;
     }
     auto sock = _mainSocket;
-    auto req2 = nlohmann::json({
+    auto payload = nlohmann::json({
         {"projectId", getProjectName()},
         {"clientId", std::to_string(getpid())},
         {"parentId", std::to_string(getpid())},
@@ -876,9 +883,9 @@ void Client::close() {
         << "Connection: keep-alive\r\n"
         << "Server-Id: close\r\n"
         << "User-Agent: curl/8.16.0\r\n"
-        << "Content-Length: " << req2.size() << "\r\n"
+        << "Content-Length: " << payload.size() << "\r\n"
         << "Content-type: application/problem+json\r\n\r\n"
-        << req2;
+        << payload;
     auto resp = makeRequest(_mainSocket, req.str());
     if (std::get<0>(resp) != "200") {
         throw std::runtime_error("Connection error: " + std::get<1>(resp));
